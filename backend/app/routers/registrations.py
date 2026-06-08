@@ -1,6 +1,6 @@
 """Registrations router - endpoints for attendee registration."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from app.database.postgres import get_db
@@ -8,6 +8,8 @@ from app.schemas.registration_schema import RegistrationSchema, RegistrationCrea
 from app.services.registration_service import RegistrationService
 from app.auth.dependencies import require_role
 from app.models.role_enum import Role
+from app.services.email_service import EmailService
+from app.models.event_model import Event
 
 router = APIRouter(prefix="/registrations", tags=["registrations"])
 
@@ -15,6 +17,7 @@ router = APIRouter(prefix="/registrations", tags=["registrations"])
 @router.post("/", response_model=RegistrationSchema, status_code=status.HTTP_201_CREATED)
 async def create_registration(
     registration: RegistrationCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role([Role.ATTENDEE, Role.ORGANIZER, Role.ADMIN]))
 ):
@@ -25,6 +28,20 @@ async def create_registration(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to register attendee or event is at capacity"
         )
+        
+    # Fetch event title for the email
+    event = db.query(Event).filter(Event.id == registration.event_id).first()
+    event_title = event.title if event else "your upcoming event"
+
+    # Queue the background email task
+    background_tasks.add_task(
+        EmailService.send_registration_email,
+        db_registration.attendee_email,
+        db_registration.attendee_name,
+        event_title,
+        db_registration.registration_code
+    )
+
     return db_registration
 
 
