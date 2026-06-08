@@ -103,7 +103,8 @@ app.add_middleware(SlowAPIMiddleware)
 
 # ── CORS (restricted to known frontend origins) ───────────────────────────────
 allowed_origins = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173,http://localhost:5174"
+    "ALLOWED_ORIGINS", 
+    "http://localhost:3000,http://localhost:5173,http://localhost:5174,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:5174"
 ).split(",")
 
 app.add_middleware(

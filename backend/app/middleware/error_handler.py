@@ -28,10 +28,6 @@ def _error_envelope(error: str, detail: str, request: Request, status_code: int)
             "detail": detail,
             "path": str(request.url.path),
             "timestamp": datetime.now(timezone.utc).isoformat(),
-        },
-        headers={
-            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
-            "Access-Control-Allow-Credentials": "true",
         }
     )
 

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = 'http://localhost:8000';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
@@ -24,7 +24,7 @@ const handleResponse = async (res) => {
 
 // ── AUTH ──
 export const authRegister = (name, email, password, role = 'attendee') =>
-  fetch(`${API_BASE_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, role }) }).then(handleResponse);
+  fetch(`${API_BASE_URL}/auth/register?_t=${Date.now()}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, role }) }).then(handleResponse);
 
 export const authLogin = (email, password) =>
   fetch(`${API_BASE_URL}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) }).then(handleResponse);
