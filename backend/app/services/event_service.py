@@ -89,15 +89,22 @@ class EventService:
         if not event:
             return None
 
-        # Use actual COUNT queries to ensure accuracy
-        total_registrations = db.query(func.count(Registration.id)).filter(
+        # Numbered Requirement 5: Event stats endpoint uses a PostgreSQL COUNT query with GROUP BY
+        reg_stats = db.query(
+            Registration.is_checked_in, 
+            func.count(Registration.id)
+        ).filter(
             Registration.event_id == event_id
-        ).scalar() or 0
+        ).group_by(
+            Registration.is_checked_in
+        ).all()
         
-        total_checked_in = db.query(func.count(Registration.id)).filter(
-            Registration.event_id == event_id,
-            Registration.is_checked_in == True
-        ).scalar() or 0
+        total_registrations = 0
+        total_checked_in = 0
+        for is_checked_in, count in reg_stats:
+            total_registrations += count
+            if is_checked_in:
+                total_checked_in += count
         
         total_sessions = db.query(func.count(SessionModel.id)).filter(
             SessionModel.event_id == event_id
