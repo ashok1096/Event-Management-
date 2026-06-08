@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authRegister } from '../services/api';
 import { UserPlus, Mail, Lock, User, Zap } from 'lucide-react';
@@ -7,6 +7,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('attendee');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const Register = () => {
     setError('');
     setLoading(true);
     try {
-      await authRegister(name, email, password, 'admin');
+      await authRegister(name, email, password, role);
       navigate('/login');
     } catch (err) {
       setError(err.message || 'Registration failed');
@@ -40,7 +41,7 @@ const Register = () => {
             </div>
             <span className="text-3xl font-extrabold text-white tracking-tight">EventPulse</span>
           </div>
-          <p className="text-slate-400 text-sm">Create your admin account</p>
+          <p className="text-slate-400 text-sm">Create your account</p>
         </div>
 
         <div className="bg-white/[0.07] backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
@@ -93,6 +94,18 @@ const Register = () => {
                   placeholder="••••••••"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">I want to</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-4 py-3 bg-white/[0.06] border border-white/10 rounded-xl text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all appearance-none"
+              >
+                <option value="attendee" className="bg-slate-800">Attend Events (Attendee)</option>
+                <option value="organizer" className="bg-slate-800">Host Events (Organizer)</option>
+              </select>
             </div>
 
             <button

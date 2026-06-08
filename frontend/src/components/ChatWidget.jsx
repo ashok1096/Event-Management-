@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, User } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, useEffect, useRef } from 'react';
+import { MessageCircle, X, Send, Zap } from 'lucide-react';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +8,6 @@ const ChatWidget = () => {
   ]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
-  const { user } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,7 +73,7 @@ const ChatWidget = () => {
               <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.sender === 'bot' && (
                   <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center mr-2 flex-shrink-0">
-                    <ZapIcon className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                    <Zap className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                   </div>
                 )}
                 <div className={`max-w-[75%] rounded-2xl p-3 text-sm ${
@@ -117,12 +115,5 @@ const ChatWidget = () => {
     </>
   );
 };
-
-// Mini Zap Icon for bot
-const ZapIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-  </svg>
-);
 
 export default ChatWidget;

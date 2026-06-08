@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import * as api from '../services/api';
 import { Calendar, Users, Mic, UserCheck, MessageSquare, ClipboardCheck, Trash2, Plus, X, Play, Square, Search, RefreshCw, Edit2, Check } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 // ── Modal ──
 const Modal = ({ title, onClose, children }) => (
@@ -53,6 +54,7 @@ const statusColor = (s) => {
 };
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [tab, setTab] = useState('events');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -87,7 +89,7 @@ const Dashboard = () => {
           const events = await api.getEvents();
           let allRegs = [];
           for (const ev of (Array.isArray(events) ? events : [])) {
-            try { const r = await api.getRegistrationsByEvent(ev.id); allRegs = allRegs.concat(r); } catch {}
+            try { const r = await api.getRegistrationsByEvent(ev.id); allRegs = allRegs.concat(r); } catch { /* skip on error */ }
           }
           setData(allRegs); break;
         }
@@ -112,7 +114,7 @@ const Dashboard = () => {
         speakers: sp.status === 'fulfilled' ? (Array.isArray(sp.value) ? sp.value.length : 0) : 0,
         feedback: fb.status === 'fulfilled' ? (fb.value?.total || 0) : 0,
       });
-    } catch {}
+    } catch { /* ignore count fetch errors */ }
   };
 
   useEffect(() => { fetchData(); }, [tab]);
@@ -276,8 +278,10 @@ const Dashboard = () => {
   };
 
   const cols = getColumns();
-  const canCreate = ['events','registrations','sessions','speakers','feedback'].includes(tab);
-  const canDelete = ['events','sessions','speakers','feedback'].includes(tab);
+  const isAdminOrOrg = user?.role === 'admin' || user?.role === 'organizer';
+  const canCreate = isAdminOrOrg ? ['events','registrations','sessions','speakers','feedback'].includes(tab) : ['registrations', 'feedback'].includes(tab);
+  const canDelete = isAdminOrOrg ? ['events','sessions','speakers','feedback', 'registrations'].includes(tab) : ['feedback', 'registrations'].includes(tab);
+  const canEdit = isAdminOrOrg ? ['events','sessions','speakers','feedback'].includes(tab) : ['feedback'].includes(tab);
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -441,7 +445,7 @@ const Dashboard = () => {
                             )}
                             
                             {/* Edit Action */}
-                            {canCreate && tab !== 'registrations' && (
+                            {canEdit && tab !== 'registrations' && (
                               <button onClick={() => openEditModal(item)} className="text-slate-600 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors border border-slate-200 dark:border-slate-700" title="Edit"><Edit2 className="w-4 h-4" /></button>
                             )}
 

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
@@ -13,7 +13,7 @@ const handleResponse = async (res) => {
   const text = await res.text();
   if (!res.ok) {
     let msg = 'Request failed';
-    try { const d = JSON.parse(text); msg = d.detail || msg; } catch {}
+    try { const d = JSON.parse(text); msg = d.detail || msg; } catch { /* ignore parse error */ }
     throw new Error(msg);
   }
   if (!text) return { success: true };
@@ -117,3 +117,19 @@ export const updateFeedback = (id, data) =>
   fetch(`${API_BASE_URL}/feedback/${id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(data) }).then(handleResponse);
 export const deleteFeedback = (id) =>
   fetch(`${API_BASE_URL}/feedback/${id}`, { method: 'DELETE', headers: getHeaders() }).then(handleResponse);
+
+// ── ALIASES FOR PAGE COMPATIBILITY ──
+export const fetchEvents = (skip = 0, limit = 100) =>
+  getEvents(skip, limit).then(data => ({ data: Array.isArray(data) ? data : [] }));
+
+export const fetchEventById = (id) =>
+  getEvent(id).then(data => ({ data }));
+
+export const registerForEvent = (eventId, formData) =>
+  createRegistration({
+    event_id: parseInt(eventId),
+    attendee_name: `${formData.firstName} ${formData.lastName}`,
+    attendee_email: formData.email,
+    company: formData.company,
+    designation: formData.ticketType
+  }).then(res => ({ ticketId: res.registration_code || res.id || 'REG-' + Date.now() }));

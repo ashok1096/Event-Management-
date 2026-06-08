@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchEventById } from '../services/api';
-import { Calendar, MapPin, Clock, Users, Ticket, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, Users, Ticket, ArrowLeft } from 'lucide-react';
 
 const EventDetail = () => {
   const { id } = useParams();
@@ -50,8 +50,8 @@ const EventDetail = () => {
       {/* Hero Section */}
       <div className="relative h-[60vh] min-h-[400px] w-full">
         <div className="absolute inset-0">
-          <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/60 to-transparent"></div>
+          <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&q=80" alt={event.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
         </div>
         
         <div className="absolute inset-0 flex flex-col justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
@@ -64,25 +64,24 @@ const EventDetail = () => {
             <div className="max-w-3xl">
               <div className="flex gap-3 mb-4">
                 <span className="bg-brand-500/20 text-brand-300 backdrop-blur-sm border border-brand-500/30 px-3 py-1 rounded-full text-sm font-semibold">
-                  Conference
+                  Event
                 </span>
                 <span className="bg-white/10 text-white backdrop-blur-sm border border-white/20 px-3 py-1 rounded-full text-sm">
-                  {event.registered} / {event.capacity} Filled
+                  {event.current_attendees || 0} / {event.max_attendees || 'Unlimited'} Attending
                 </span>
               </div>
               <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight">
                 {event.title}
               </h1>
               <div className="flex flex-wrap gap-4 text-slate-200">
-                <div className="flex items-center gap-2"><Calendar className="w-5 h-5 text-brand-400" /> {new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
-                <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-brand-400" /> {event.time}</div>
-                <div className="flex items-center gap-2"><MapPin className="w-5 h-5 text-brand-400" /> {event.location}</div>
+                <div className="flex items-center gap-2"><Calendar className="w-5 h-5 text-brand-400" /> {new Date(event.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                <div className="flex items-center gap-2"><MapPin className="w-5 h-5 text-brand-400" /> {event.location || 'TBD'}</div>
               </div>
             </div>
             
             <Link 
               to={`/events/${event.id}/register`}
-              className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-[0_0_20px_rgba(20,184,166,0.4)] transition-all hover:scale-105 flex items-center justify-center gap-2"
+              className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
               <Ticket className="w-6 h-6" />
               Register Now
@@ -95,59 +94,72 @@ const EventDetail = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-12">
           {/* Overview */}
-          <section className="glass rounded-3xl p-8 animate-slide-up">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">Overview</h2>
-            <p className="text-slate-600 text-lg leading-relaxed">
-              {event.description}
+          <section className="bg-white dark:bg-dark-card rounded-3xl p-8 animate-slide-up border border-slate-200 dark:border-dark-border">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Overview</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+              {event.description || 'No description available for this event.'}
             </p>
           </section>
 
-          {/* Schedule */}
+          {/* Event Info */}
           <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <h2 className="text-3xl font-bold text-slate-900 mb-8">Schedule</h2>
-            <div className="space-y-4">
-              {event.sessions && event.sessions.length > 0 ? (
-                event.sessions.map((session, idx) => (
-                  <div key={session.id} className="glass rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center hover:border-brand-300 transition-colors">
-                    <div className="bg-brand-50 text-brand-600 font-bold px-4 py-2 rounded-lg min-w-[120px] text-center">
-                      {session.time}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-1">{session.title}</h3>
-                      <p className="text-slate-500">by <span className="font-medium text-slate-700">{session.speaker}</span></p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-slate-500 italic">Schedule will be announced soon.</p>
-              )}
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">Event Information</h2>
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 border border-slate-200 dark:border-dark-border">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Start Date</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white mt-2">
+                    {new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">End Date</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white mt-2">
+                    {new Date(event.end_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Location</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white mt-2">{event.location || 'TBD'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Capacity</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white mt-2">{event.max_attendees || 'Unlimited'}</p>
+                </div>
+              </div>
             </div>
           </section>
         </div>
 
-        {/* Sidebar: Speakers */}
+        {/* Sidebar: Quick Info */}
         <div className="space-y-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          <div className="glass rounded-3xl p-8 sticky top-24">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <div className="bg-white dark:bg-dark-card rounded-3xl p-8 sticky top-24 border border-slate-200 dark:border-dark-border">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
               <Users className="w-6 h-6 text-brand-500" />
-              Speakers
+              Quick Stats
             </h2>
             
             <div className="space-y-6">
-              {event.speakers && event.speakers.length > 0 ? (
-                event.speakers.map(speaker => (
-                  <div key={speaker.id} className="flex items-center gap-4 group">
-                    <img src={speaker.avatar} alt={speaker.name} className="w-16 h-16 rounded-full object-cover border-2 border-transparent group-hover:border-brand-500 transition-all" />
-                    <div>
-                      <h4 className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{speaker.name}</h4>
-                      <p className="text-sm text-slate-500">{speaker.role}</p>
-                      <p className="text-xs text-brand-500 font-medium">{speaker.company}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-slate-500 italic">Speakers will be announced soon.</p>
-              )}
+              <div>
+                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Registered</p>
+                <p className="text-3xl font-bold text-brand-600 dark:text-brand-400 mt-2">{event.current_attendees || 0}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Total Capacity</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{event.max_attendees || 'Unlimited'}</p>
+              </div>
+              <div className="pt-6 border-t border-slate-200 dark:border-dark-border">
+                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Status</p>
+                <div className="mt-3">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${
+                    event.is_active 
+                      ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' 
+                      : 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-400'
+                  }`}>
+                    {event.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { LogOut, User as UserIcon, Zap, Moon, Sun, Info, LayoutDashboard } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -7,6 +6,9 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import About from './pages/About';
+import EventListing from './pages/EventListing';
+import EventDetail from './pages/EventDetail';
+import Registration from './pages/Registration';
 import ChatWidget from './components/ChatWidget';
 
 const Navbar = () => {
@@ -86,6 +88,9 @@ function App() {
             <Routes>
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+              <Route path="/events" element={<ProtectedRoute><EventListing /></ProtectedRoute>} />
+              <Route path="/events/:id" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
+              <Route path="/events/:id/register" element={<ProtectedRoute><Registration /></ProtectedRoute>} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Routes>

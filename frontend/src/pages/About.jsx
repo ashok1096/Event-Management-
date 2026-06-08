@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sparkles, Code, Globe, Shield, Zap, Coffee } from 'lucide-react';
 
 const About = () => {

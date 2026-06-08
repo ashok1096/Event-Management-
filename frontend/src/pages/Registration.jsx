@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { fetchEventById, registerForEvent } from '../services/api';
 import { CheckCircle2, ArrowLeft, Ticket } from 'lucide-react';
 
 const Registration = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);

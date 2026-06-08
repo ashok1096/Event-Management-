@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchEvents } from '../services/api';
-import { Calendar, MapPin, Users, ArrowRight } from 'lucide-react';
+import { MapPin, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const EventListing = () => {
@@ -54,15 +54,14 @@ const EventListing = () => {
           >
             <div className="relative h-56 bg-slate-200 overflow-hidden">
               <img 
-                src={event.image} 
+                src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&q=80"
                 alt={event.title} 
                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&q=80'; }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent z-10 pointer-events-none"></div>
               <div className="absolute bottom-4 left-4 z-20">
                 <div className="bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-2 inline-block shadow-lg border border-brand-400">
-                  {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </div>
               </div>
             </div>
@@ -73,11 +72,11 @@ const EventListing = () => {
               <div className="space-y-2 mb-6">
                 <div className="flex items-center text-slate-500 text-sm">
                   <MapPin className="w-4 h-4 mr-2 text-brand-500" />
-                  {event.location}
+                  {event.location || 'TBD'}
                 </div>
                 <div className="flex items-center text-slate-500 text-sm">
                   <Users className="w-4 h-4 mr-2 text-brand-500" />
-                  {event.registered} / {event.capacity} Attending
+                  {event.current_attendees || 0} / {event.max_attendees || 'Unlimited'} Attending
                 </div>
               </div>
               
@@ -85,7 +84,7 @@ const EventListing = () => {
                 <div className="w-full bg-slate-100 rounded-full h-2 mr-4 overflow-hidden">
                   <div 
                     className="bg-brand-500 h-2 rounded-full" 
-                    style={{ width: `${event.capacity > 0 ? Math.min((event.registered / event.capacity) * 100, 100) : 0}%` }}
+                    style={{ width: `${event.max_attendees > 0 ? Math.min(((event.current_attendees || 0) / event.max_attendees) * 100, 100) : 0}%` }}
                   ></div>
                 </div>
                 <Link 
