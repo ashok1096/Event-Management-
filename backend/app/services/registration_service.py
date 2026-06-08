@@ -60,6 +60,37 @@ class RegistrationService:
             db.rollback()  # Release lock
             return None  # Event is full
 
+        # ── Prevent duplicate active registrations & handle cancelled ones ────────
+        existing = db.query(Registration).filter(
+            Registration.event_id == registration.event_id,
+            Registration.attendee_email == registration.attendee_email
+        ).first()
+        
+        if existing:
+            if existing.status != "cancelled":
+                db.rollback()
+                from fastapi import HTTPException
+                raise HTTPException(status_code=400, detail="Email already registered for this event")
+            else:
+                # Reactivate the cancelled registration
+                for k, v in registration.dict().items():
+                    if k != "registration_code":
+                        setattr(existing, k, v)
+                existing.status = "registered"
+                # Keep the same registration code or generate a new one? Better to keep it or regenerate.
+                existing.registration_code = RegistrationService.generate_unique_code(db)
+                
+                event.current_attendees = confirmed_count + 1
+                db.add(existing)
+                db.add(event)
+                try:
+                    db.commit()
+                    db.refresh(existing)
+                except Exception as e:
+                    db.rollback()
+                    raise e
+                return existing
+
         # ── Create registration with DB-verified unique code ──────────────────
         db_registration = Registration(
             **{k: v for k, v in registration.dict().items() if k != "registration_code"},
@@ -71,8 +102,13 @@ class RegistrationService:
 
         db.add(db_registration)
         db.add(event)
-        db.commit()
-        db.refresh(db_registration)
+        try:
+            db.commit()
+            db.refresh(db_registration)
+        except Exception as e:
+            db.rollback()
+            raise e
+            
         return db_registration
 
     @staticmethod
