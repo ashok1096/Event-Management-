@@ -91,7 +91,7 @@ const Dashboard = () => {
           for (const ev of (Array.isArray(events) ? events : [])) {
             try { const r = await api.getRegistrationsByEvent(ev.id); allRegs = allRegs.concat(r); } catch { /* skip on error */ }
           }
-          setData(allRegs); break;
+          setData(allRegs.filter(reg => reg.status !== 'cancelled')); break;
         }
         case 'sessions': { const r = await api.getSessions(); setData(r?.sessions || []); break; }
         case 'speakers': res = await api.getSpeakers(); setData(Array.isArray(res) ? res : []); break;
