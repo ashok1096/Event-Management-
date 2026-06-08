@@ -1,0 +1,195 @@
+# EventPulse Backend CI Pipeline
+# Triggers on pushes to develop and main branches
+
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  PYTHON_VERSION: "3.11"
+  PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+
+stages:
+  # ─────────────────────────────────────────────
+  # Stage 1: Lint & Type Check
+  # ─────────────────────────────────────────────
+  - stage: Lint
+    displayName: "Lint & Type Check"
+    jobs:
+      - job: LintJob
+        displayName: "flake8 + mypy"
+        steps:
+          - checkout: self
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "$(PYTHON_VERSION)"
+            displayName: "Set Python $(PYTHON_VERSION)"
+
+          - task: Cache@2
+            inputs:
+              key: 'pip | "$(Agent.OS)" | backend/requirements.txt'
+              restoreKeys: pip | "$(Agent.OS)"
+              path: $(PIP_CACHE_DIR)
+            displayName: "Cache pip packages"
+
+          - bash: |
+              python -m pip install --upgrade pip
+              pip install flake8 mypy
+              pip install -r backend/requirements.txt
+            displayName: "Install dependencies"
+
+          - bash: |
+              flake8 backend/app \
+                --max-line-length=120 \
+                --exclude=__pycache__,.venv,migrations \
+                --statistics \
+                --count
+            displayName: "Run flake8 lint"
+
+          - bash: |
+              mypy backend/app \
+                --ignore-missing-imports \
+                --exclude "migrations|__pycache__"
+            displayName: "Run mypy type check"
+            continueOnError: true
+
+  # ─────────────────────────────────────────────
+  # Stage 2: Security Scan
+  # ─────────────────────────────────────────────
+  - stage: Security
+    displayName: "Security Scan"
+    dependsOn: Lint
+    jobs:
+      - job: SecurityJob
+        displayName: "bandit + pip-audit"
+        steps:
+          - checkout: self
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "$(PYTHON_VERSION)"
+            displayName: "Set Python $(PYTHON_VERSION)"
+
+          - bash: |
+              pip install bandit pip-audit
+              pip install -r backend/requirements.txt
+            displayName: "Install security tools"
+
+          - bash: |
+              bandit -r backend/app \
+                -x backend/app/tests \
+                -ll \
+                --format txt
+            displayName: "Run bandit security scan"
+            continueOnError: true
+
+          - bash: |
+              pip-audit -r backend/requirements.txt
+            displayName: "Audit dependencies for CVEs"
+            continueOnError: true
+
+  # ─────────────────────────────────────────────
+  # Stage 3: Tests
+  # ─────────────────────────────────────────────
+  - stage: Test
+    displayName: "Run Tests"
+    dependsOn: Lint
+    jobs:
+      - job: TestJob
+        displayName: "pytest with coverage"
+        services:
+          postgres:
+            image: postgres:15
+            env:
+              POSTGRES_USER: testuser
+              POSTGRES_PASSWORD: testpassword
+              POSTGRES_DB: eventpulse_test
+            ports:
+              - 5432:5432
+            options: >-
+              --health-cmd "pg_isready -U testuser"
+              --health-interval 10s
+              --health-timeout 5s
+              --health-retries 5
+
+        steps:
+          - checkout: self
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "$(PYTHON_VERSION)"
+            displayName: "Set Python $(PYTHON_VERSION)"
+
+          - task: Cache@2
+            inputs:
+              key: 'pip | "$(Agent.OS)" | backend/requirements.txt'
+              restoreKeys: pip | "$(Agent.OS)"
+              path: $(PIP_CACHE_DIR)
+            displayName: "Cache pip packages"
+
+          - bash: |
+              pip install --upgrade pip
+              pip install -r backend/requirements.txt
+              pip install pytest pytest-asyncio pytest-cov httpx
+            displayName: "Install dependencies"
+
+          - bash: |
+              cd backend
+              pytest tests/ \
+                -v \
+                --cov=app \
+                --cov-report=xml:coverage.xml \
+                --cov-report=term-missing \
+                --tb=short \
+                -x
+            displayName: "Run pytest"
+            env:
+              DATABASE_URL: "postgresql+asyncpg://testuser:testpassword@localhost:5432/eventpulse_test"
+              SECRET_KEY: "test-secret-key-for-ci-only"
+              MONGODB_URI: "mongodb://localhost:27017/eventpulse_test"
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: backend/coverage.xml
+            displayName: "Publish coverage report"
+            condition: succeededOrFailed()
+
+  # ─────────────────────────────────────────────
+  # Stage 4: Build Validation
+  # ─────────────────────────────────────────────
+  - stage: Build
+    displayName: "Build Validation"
+    dependsOn: Test
+    jobs:
+      - job: BuildJob
+        displayName: "Verify app imports & startup"
+        steps:
+          - checkout: self
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "$(PYTHON_VERSION)"
+            displayName: "Set Python $(PYTHON_VERSION)"
+
+          - bash: |
+              pip install --upgrade pip
+              pip install -r backend/requirements.txt
+            displayName: "Install dependencies"
+
+          - bash: |
+              cd backend
+              python -c "
+              import os
+              os.environ['SECRET_KEY'] = 'ci-build-check-key'
+              os.environ['MONGODB_URI'] = 'mongodb://localhost:27017/test'
+              from app.main import app
+              print('App imported successfully:', app.title)
+              "
+            displayName: "Verify app imports without errors"
