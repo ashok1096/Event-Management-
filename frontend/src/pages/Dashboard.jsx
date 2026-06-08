@@ -128,6 +128,7 @@ const Dashboard = () => {
       else if (tab === 'sessions') await api.deleteSession(id);
       else if (tab === 'speakers') await api.deleteSpeaker(id);
       else if (tab === 'feedback') await api.deleteFeedback(id);
+      else if (tab === 'registrations') await api.cancelRegistration(id);
       fetchData(); fetchCounts();
       alert('Delete successful!');
     } catch (e) { alert('Delete failed: ' + e.message); }
