@@ -14,6 +14,9 @@ class EmailService:
         Sends a registration confirmation email.
         This function runs in the background.
         """
+        from dotenv import load_dotenv
+        load_dotenv()
+        
         smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
         smtp_user = os.getenv("SMTP_USER")
