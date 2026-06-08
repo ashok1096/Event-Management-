@@ -278,10 +278,23 @@ const Dashboard = () => {
   };
 
   const cols = getColumns();
-  const isAdminOrOrg = user?.role === 'admin' || user?.role === 'organizer';
-  const canCreate = isAdminOrOrg ? ['events','registrations','sessions','speakers','feedback'].includes(tab) : ['registrations', 'feedback'].includes(tab);
-  const canDelete = isAdminOrOrg ? ['events','sessions','speakers','feedback', 'registrations'].includes(tab) : ['feedback', 'registrations'].includes(tab);
-  const canEdit = isAdminOrOrg ? ['events','sessions','speakers','feedback'].includes(tab) : ['feedback'].includes(tab);
+  const userRole = (user?.role || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN';
+  const isOrganizer = userRole === 'ORGANIZER';
+  const isAdminOrOrg = isAdmin || isOrganizer;
+
+  // RBAC: What each role can do per tab
+  const canCreate = isAdminOrOrg
+    ? ['events','registrations','sessions','speakers','feedback'].includes(tab)
+    : ['registrations', 'feedback'].includes(tab);          // Attendee
+  const canDelete = isAdmin
+    ? ['events','sessions','speakers','feedback','registrations'].includes(tab)
+    : isOrganizer
+      ? ['events','sessions','speakers','registrations'].includes(tab)
+      : ['registrations'].includes(tab);                    // Attendee can cancel own
+  const canEdit = isAdminOrOrg
+    ? ['events','sessions','speakers','feedback'].includes(tab)
+    : false;                                                // Attendee cannot edit
 
   return (
     <div className="flex flex-1 overflow-hidden">

@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import bcrypt
 
 # NOTE: load_dotenv() is NOT called here.
 # It is called ONCE at application startup in main.py.
@@ -11,17 +11,18 @@ if not SECRET_KEY:
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt."""
+    pwd_bytes = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(pwd_bytes, bcrypt.gensalt()).decode("utf-8")
 
 
-def hash_password(password: str):
-    password = password[:72]
-    return pwd_context.hash(password)
-
-
-def verify_password(plain_password: str, hashed_password: str):
-    plain_password = plain_password[:72]
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a plain password against a bcrypt hash."""
+    pwd_bytes = plain_password.encode("utf-8")[:72]
+    hash_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(pwd_bytes, hash_bytes)
 
 
 def create_access_token(data: dict):

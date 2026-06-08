@@ -49,6 +49,23 @@ def seed():
         existing2.role = Role.ADMIN
         print(f'Updated user {email2}')
 
+    # User 3: admin@gmail.com
+    email3 = 'admin@gmail.com'
+    existing3 = db.query(User).filter(User.email == email3).first()
+    if not existing3:
+        user3 = User(
+            name='Admin',
+            email=email3,
+            password=hash_password('admin'),
+            role=Role.ADMIN
+        )
+        db.add(user3)
+        print(f'Created user {email3}')
+    else:
+        existing3.password = hash_password('admin')
+        existing3.role = Role.ADMIN
+        print(f'Updated user {email3}')
+
     db.commit()
 
 if __name__ == "__main__":

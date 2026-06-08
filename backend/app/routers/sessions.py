@@ -234,7 +234,7 @@ def end_session(session_id: int, db: DBSession = Depends(get_db), current_user: 
 
 
 @router.get("/{session_id}/attendance")
-def get_session_attendance(session_id: int, db: DBSession = Depends(get_db)):
+def get_session_attendance(session_id: int, db: DBSession = Depends(get_db), current_user: dict = Depends(require_role([Role.ORGANIZER, Role.ADMIN]))):
     session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
     if not session:

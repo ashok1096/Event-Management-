@@ -11,7 +11,7 @@ if not MONGODB_URI:
     raise RuntimeError("MONGODB_URI missing in .env file")
 
 client = AsyncIOMotorClient(MONGODB_URI)
-mongo_db = client.get_default_database()
+mongo_db = client[os.getenv("MONGO_DB_NAME", "eventpulse")]
 
 
 async def init_mongo():

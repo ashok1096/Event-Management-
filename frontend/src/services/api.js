@@ -21,7 +21,7 @@ const handleResponse = async (res) => {
 };
 
 // ── AUTH ──
-export const authRegister = (name, email, password, role = 'admin') =>
+export const authRegister = (name, email, password, role = 'attendee') =>
   fetch(`${API_BASE_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, role }) }).then(handleResponse);
 
 export const authLogin = (email, password) =>

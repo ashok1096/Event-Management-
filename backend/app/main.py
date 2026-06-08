@@ -48,6 +48,34 @@ async def lifespan(app: FastAPI):
     logger.info("Creating PostgreSQL tables…")
     Base.metadata.create_all(bind=engine)
 
+    # ── Seed hardcoded admin account ──────────────────────────────────────────
+    from app.database.postgres import SessionLocal
+    from app.models.user_model import User
+    from app.models.role_enum import Role
+    from app.auth.security import hash_password
+
+    db = SessionLocal()
+    try:
+        admin_email = "admin@gmail.com"
+        existing_admin = db.query(User).filter(User.email == admin_email).first()
+        if not existing_admin:
+            admin_user = User(
+                name="Admin",
+                email=admin_email,
+                password=hash_password("admin"),
+                role=Role.ADMIN,
+            )
+            db.add(admin_user)
+            db.commit()
+            logger.info("✅ Default admin account seeded (admin@gmail.com)")
+        else:
+            logger.info("ℹ️  Admin account already exists, skipping seed.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Failed to seed admin account: {e}")
+    finally:
+        db.close()
+
     logger.info("Connecting to MongoDB…")
     await init_mongo()
 
