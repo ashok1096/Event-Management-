@@ -18,6 +18,7 @@ const Register = () => {
     setLoading(true);
     try {
       await authRegister(name, email, password, role);
+      alert('Registration successful! Please log in.');
       navigate('/login');
     } catch (err) {
       setError(err.message || 'Registration failed');

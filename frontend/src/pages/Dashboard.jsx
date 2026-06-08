@@ -129,6 +129,7 @@ const Dashboard = () => {
       else if (tab === 'speakers') await api.deleteSpeaker(id);
       else if (tab === 'feedback') await api.deleteFeedback(id);
       fetchData(); fetchCounts();
+      alert('Delete successful!');
     } catch (e) { alert('Delete failed: ' + e.message); }
   };
 
@@ -192,23 +193,24 @@ const Dashboard = () => {
         else if (tab === 'feedback') await api.createFeedback(payload);
       }
       setModalOpen(false); setForm({}); fetchData(); fetchCounts();
+      alert('Save successful!');
     } catch (err) { alert('Save failed: ' + err.message); }
     setSaving(false);
   };
 
   // ── Special actions ──
   const handleCheckin = async (regId) => {
-    try { await api.checkInRegistration(regId); fetchData(); } catch (e) { alert(e.message); }
+    try { await api.checkInRegistration(regId); fetchData(); alert('Check-in successful!'); } catch (e) { alert(e.message); }
   };
   const handleCancelReg = async (regId) => {
     if (!window.confirm('Cancel this registration?')) return;
-    try { await api.cancelRegistration(regId); fetchData(); } catch (e) { alert(e.message); }
+    try { await api.cancelRegistration(regId); fetchData(); alert('Registration cancelled successfully!'); } catch (e) { alert(e.message); }
   };
   const handleStartSession = async (id) => {
-    try { await api.startSession(id); fetchData(); } catch (e) { alert(e.message); }
+    try { await api.startSession(id); fetchData(); alert('Session started successfully!'); } catch (e) { alert(e.message); }
   };
   const handleEndSession = async (id) => {
-    try { await api.endSession(id); fetchData(); } catch (e) { alert(e.message); }
+    try { await api.endSession(id); fetchData(); alert('Session ended successfully!'); } catch (e) { alert(e.message); }
   };
 
   const handleSearch = async () => {
@@ -237,6 +239,7 @@ const Dashboard = () => {
       else if (checkinForm.type === 'session') res = await api.checkinSession(parseInt(checkinForm.registration_id), parseInt(checkinForm.session_id));
       else res = await api.checkinSessionCode(checkinForm.session_code, checkinForm.registration_code);
       setCheckinResult(res);
+      alert('Check-in successful!');
     } catch (err) { alert('Check-in failed: ' + err.message); }
   };
 
